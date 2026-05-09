@@ -1,6 +1,12 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { BarChart3, CalendarDays, Home, LogOut, PlusCircle } from "lucide-react";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { ensureUserProfile } from "@/lib/supabase/profiles";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: Home },
@@ -15,11 +21,55 @@ type AppShellProps = {
 };
 
 export function AppShell({ children, activePath = "/" }: AppShellProps) {
+  const router = useRouter();
+  const [email, setEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    try {
+      const supabase = createSupabaseBrowserClient();
+
+      supabase.auth.getUser().then(({ data }) => {
+        if (isMounted) {
+          setEmail(data.user?.email ?? null);
+        }
+
+        if (data.user) {
+          ensureUserProfile(supabase, data.user);
+        }
+      });
+
+      const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+        setEmail(session?.user.email ?? null);
+
+        if (session?.user) {
+          ensureUserProfile(supabase, session.user);
+        }
+      });
+
+      return () => {
+        isMounted = false;
+        listener.subscription.unsubscribe();
+      };
+    } catch {
+      setEmail(null);
+    }
+  }, []);
+
+  async function handleLogout() {
+    const supabase = createSupabaseBrowserClient();
+    await supabase.auth.signOut();
+    setEmail(null);
+    router.push("/login");
+    router.refresh();
+  }
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
         <Link className="brand" href="/">
-          <span className="brand-mark">弓</span>
+          <span className="brand-mark">Y</span>
           <span>
             <strong>YumiTrack</strong>
             <small>Kyudo journal</small>
@@ -38,15 +88,35 @@ export function AppShell({ children, activePath = "/" }: AppShellProps) {
               </Link>
             );
           })}
+
+          {email ? (
+            <button className="nav-item nav-button" onClick={handleLogout} type="button">
+              <LogOut size={18} aria-hidden="true" />
+              Sign out
+            </button>
+          ) : (
+            <Link className="nav-item" href="/login">
+              <LogOut size={18} aria-hidden="true" />
+              Log in
+            </Link>
+          )}
         </nav>
 
         <div className="profile-panel">
-          <span className="avatar">DH</span>
+          <span className="avatar">{email ? email.slice(0, 2).toUpperCase() : "YT"}</span>
           <div>
-            <strong>Duy Huynh</strong>
-            <small>Demo account</small>
+            <strong>{email ?? "Guest"}</strong>
+            <small>{email ? "Logged in" : "Not logged in"}</small>
           </div>
-          <LogOut size={18} aria-hidden="true" />
+          {email ? (
+            <button aria-label="Log out" className="icon-action" onClick={handleLogout} type="button">
+              <LogOut size={18} aria-hidden="true" />
+            </button>
+          ) : (
+            <Link aria-label="Log in" className="icon-action" href="/login">
+              <LogOut size={18} aria-hidden="true" />
+            </Link>
+          )}
         </div>
       </aside>
 
