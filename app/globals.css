@@ -340,6 +340,16 @@ h3 {
   padding: 7px 10px;
 }
 
+.session-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.note-save-action {
+  margin-top: 12px;
+}
+
 .field {
   display: grid;
   gap: 7px;
@@ -648,6 +658,12 @@ select:focus {
   .section-heading,
   .form-heading {
     align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .session-actions {
+    width: 100%;
+    align-items: stretch;
     flex-direction: column;
   }
 

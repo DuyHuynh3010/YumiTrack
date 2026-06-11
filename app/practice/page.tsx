@@ -1,6 +1,5 @@
 import { AppShell } from "@/components/AppShell";
 import { PracticeBuilder } from "@/components/PracticeBuilder";
-import { mockSessions } from "@/lib/mock-data";
 
 export default function PracticePage() {
   return (
@@ -13,7 +12,7 @@ export default function PracticePage() {
       </header>
 
       <div style={{ marginTop: 32 }}>
-        <PracticeBuilder initialSession={mockSessions[0]} />
+        <PracticeBuilder />
       </div>
     </AppShell>
   );
