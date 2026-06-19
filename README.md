@@ -6,9 +6,10 @@ YumiTrack is a Kyudo practice tracker based on the provided PDF specification.
 
 - Next.js App Router project structure
 - TypeScript models for sessions and 4-arrow ends
-- Dashboard with today/week/month style summaries
+- Dashboard with Supabase-backed today/week/recent-session summaries
 - Practice page with interactive O/X end input
 - Practice sessions, overall notes, and ends persisted to Supabase
+- Session detail page backed by Supabase
 - Calendar page with color-coded day states
 - Stats page with chart mockups and filters
 - Login and signup wired to Supabase Auth
@@ -47,10 +48,10 @@ http://localhost:3000
 
 ## Next Build Steps
 
-1. Replace dashboard mock data with Supabase reads.
-2. Load calendar and session detail pages from Supabase.
-3. Replace chart mockups with real grouped data.
-4. Add edit/delete controls for sessions and ends.
+1. Load calendar page from Supabase.
+2. Replace chart mockups with real grouped data.
+3. Add edit/delete controls for sessions and ends.
+4. Add dashboard loading skeletons and better empty states.
 5. Deploy and add production redirect URLs.
 
 ## Test Practice Persistence

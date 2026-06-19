@@ -43,6 +43,16 @@ async function loadEnds(supabase: SupabaseClient, sessionId: string) {
   return (data as EndRow[]).map(mapEnd);
 }
 
+async function mapSessionWithEnds(supabase: SupabaseClient, row: SessionRow): Promise<PracticeSession> {
+  return {
+    id: row.id,
+    practiceDate: row.practice_date,
+    overallNote: row.overall_note ?? "",
+    ends: await loadEnds(supabase, row.id),
+    createdAt: row.created_at,
+  };
+}
+
 export async function loadLatestSessionForDate(supabase: SupabaseClient, userId: string, practiceDate: string) {
   const { data, error } = await supabase
     .from("practice_sessions")
@@ -63,13 +73,42 @@ export async function loadLatestSessionForDate(supabase: SupabaseClient, userId:
 
   const row = data as SessionRow;
 
-  return {
-    id: row.id,
-    practiceDate: row.practice_date,
-    overallNote: row.overall_note ?? "",
-    ends: await loadEnds(supabase, row.id),
-    createdAt: row.created_at,
-  } satisfies PracticeSession;
+  return mapSessionWithEnds(supabase, row);
+}
+
+export async function loadRecentPracticeSessions(supabase: SupabaseClient, userId: string, limit = 12) {
+  const { data, error } = await supabase
+    .from("practice_sessions")
+    .select("id, practice_date, overall_note, created_at")
+    .eq("user_id", userId)
+    .order("practice_date", { ascending: false })
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    throw error;
+  }
+
+  return Promise.all((data as SessionRow[]).map((row) => mapSessionWithEnds(supabase, row)));
+}
+
+export async function loadPracticeSessionById(supabase: SupabaseClient, userId: string, sessionId: string) {
+  const { data, error } = await supabase
+    .from("practice_sessions")
+    .select("id, practice_date, overall_note, created_at")
+    .eq("user_id", userId)
+    .eq("id", sessionId)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  return mapSessionWithEnds(supabase, data as SessionRow);
 }
 
 export async function createPracticeSession(supabase: SupabaseClient, userId: string, practiceDate: string) {
