@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
-import { CalendarView } from "@/components/CalendarView";
+import { CalendarDayData, CalendarView } from "@/components/CalendarView";
 import { EndCard } from "@/components/EndCard";
 import { ProgressChart } from "@/components/ProgressChart";
 import { SessionCard } from "@/components/SessionCard";
@@ -28,6 +28,18 @@ function getDateDaysAgo(days: number) {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+function getStatusForRate(hitRate: number) {
+  if (hitRate >= 70) {
+    return "good";
+  }
+
+  if (hitRate >= 50) {
+    return "warn";
+  }
+
+  return "danger";
 }
 
 export function DashboardView() {
@@ -78,6 +90,27 @@ export function DashboardView() {
   }, [sessions]);
   const todayStats = useMemo(() => summarizeSessions(todaySessions), [todaySessions]);
   const weekStats = useMemo(() => summarizeSessions(weekSessions), [weekSessions]);
+  const sessionsByDate = useMemo(
+    () =>
+      sessions.reduce<Record<string, PracticeSession[]>>((groups, session) => {
+        groups[session.practiceDate] = groups[session.practiceDate] ?? [];
+        groups[session.practiceDate].push(session);
+        return groups;
+      }, {}),
+    [sessions],
+  );
+  const dayData = useMemo(
+    () =>
+      Object.entries(sessionsByDate).reduce<Record<string, CalendarDayData>>((data, [date, dateSessions]) => {
+        const stats = summarizeSessions(dateSessions);
+        data[date] = {
+          date,
+          status: getStatusForRate(stats.hitRate),
+        };
+        return data;
+      }, {}),
+    [sessionsByDate],
+  );
   const currentSession = todaySessions[0] ?? sessions[0] ?? null;
   const currentStats = currentSession ? calculateSessionStats(currentSession) : null;
   const bestSession = useMemo(
@@ -176,7 +209,7 @@ export function DashboardView() {
                 <h2>Calendar</h2>
               </div>
             </div>
-            <CalendarView />
+            <CalendarView dayData={dayData} monthDate={new Date()} selectedDate={todayDate} />
           </section>
 
           <section className="panel stack">
