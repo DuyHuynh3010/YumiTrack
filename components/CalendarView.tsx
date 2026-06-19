@@ -1,49 +1,62 @@
-type CalendarViewProps = {
-  selectedDay?: number;
+export type CalendarDayStatus = "good" | "warn" | "danger";
+
+export type CalendarDayData = {
+  date: string;
+  status?: CalendarDayStatus;
 };
 
-const calendarDays = [
-  { day: 27, tone: "muted" },
-  { day: 28, tone: "muted" },
-  { day: 29, tone: "muted" },
-  { day: 30, tone: "muted" },
-  { day: 1, tone: "good" },
-  { day: 2, tone: "warn" },
-  { day: 3, tone: "good" },
-  { day: 4 },
-  { day: 5 },
-  { day: 6 },
-  { day: 7 },
-  { day: 8 },
-  { day: 9 },
-  { day: 10 },
-  { day: 11 },
-  { day: 12 },
-  { day: 13 },
-  { day: 14 },
-  { day: 15 },
-  { day: 16 },
-  { day: 17 },
-  { day: 18 },
-  { day: 19 },
-  { day: 20 },
-  { day: 21 },
-  { day: 22 },
-  { day: 23 },
-  { day: 24 },
-];
+type CalendarViewProps = {
+  monthDate: Date;
+  selectedDate: string;
+  dayData: Record<string, CalendarDayData>;
+  onSelectDate?: (date: string) => void;
+};
 
-export function CalendarView({ selectedDay = 3 }: CalendarViewProps) {
+function toDateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function buildCalendarDays(monthDate: Date) {
+  const firstOfMonth = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+  const firstGridDate = new Date(firstOfMonth);
+  const mondayBasedOffset = (firstOfMonth.getDay() + 6) % 7;
+  firstGridDate.setDate(firstOfMonth.getDate() - mondayBasedOffset);
+
+  return Array.from({ length: 42 }, (_, index) => {
+    const date = new Date(firstGridDate);
+    date.setDate(firstGridDate.getDate() + index);
+
+    return {
+      day: date.getDate(),
+      dateKey: toDateKey(date),
+      isOutsideMonth: date.getMonth() !== monthDate.getMonth(),
+    };
+  });
+}
+
+export function CalendarView({ monthDate, selectedDate, dayData, onSelectDate }: CalendarViewProps) {
+  const calendarDays = buildCalendarDays(monthDate);
+
   return (
     <div className="calendar-grid" aria-label="Practice calendar">
       {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
         <span key={day}>{day}</span>
       ))}
-      {calendarDays.map((day) => (
-        <button className={`${day.tone ?? ""}${day.day === selectedDay ? " selected" : ""}`} key={day.day} type="button">
-          {day.day}
-        </button>
-      ))}
+      {calendarDays.map((day) => {
+        const status = dayData[day.dateKey]?.status;
+        const className = [day.isOutsideMonth ? "muted" : "", status ?? "", day.dateKey === selectedDate ? "selected" : ""]
+          .filter(Boolean)
+          .join(" ");
+
+        return (
+          <button className={className} key={day.dateKey} onClick={() => onSelectDate?.(day.dateKey)} type="button">
+            {day.day}
+          </button>
+        );
+      })}
     </div>
   );
 }
