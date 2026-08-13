@@ -92,6 +92,21 @@ export async function loadRecentPracticeSessions(supabase: SupabaseClient, userI
   return Promise.all((data as SessionRow[]).map((row) => mapSessionWithEnds(supabase, row)));
 }
 
+export async function loadAllPracticeSessions(supabase: SupabaseClient, userId: string) {
+  const { data, error } = await supabase
+    .from("practice_sessions")
+    .select("id, practice_date, overall_note, created_at")
+    .eq("user_id", userId)
+    .order("practice_date", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    throw error;
+  }
+
+  return Promise.all((data as SessionRow[]).map((row) => mapSessionWithEnds(supabase, row)));
+}
+
 export async function loadPracticeSessionsInRange(supabase: SupabaseClient, userId: string, startDate: string, endDate: string) {
   const { data, error } = await supabase
     .from("practice_sessions")
