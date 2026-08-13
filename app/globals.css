@@ -559,6 +559,12 @@ select:focus {
   text-align: center;
 }
 
+.recharts-frame {
+  height: 280px;
+  margin-top: 20px;
+  min-width: 0;
+}
+
 .session-card {
   display: flex;
   align-items: center;

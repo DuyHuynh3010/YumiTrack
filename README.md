@@ -11,7 +11,7 @@ YumiTrack is a Kyudo practice tracker based on the provided PDF specification.
 - Practice sessions, overall notes, and ends persisted to Supabase
 - Session detail page backed by Supabase
 - Calendar page with Supabase-backed color-coded day states
-- Stats page with chart mockups and filters
+- Stats page with Supabase-backed Recharts charts and filters
 - Login and signup wired to Supabase Auth
 - Sidebar logout wired to Supabase Auth
 - Session detail page
@@ -48,10 +48,10 @@ http://localhost:3000
 
 ## Next Build Steps
 
-1. Replace chart mockups with real grouped data.
-2. Add edit/delete controls for sessions and ends.
-3. Add dashboard loading skeletons and better empty states.
-4. Add password reset and profile settings.
+1. Add edit/delete controls for sessions and ends.
+2. Add dashboard loading skeletons and better empty states.
+3. Add password reset and profile settings.
+4. Add CSV export for practice history.
 5. Deploy and add production redirect URLs.
 
 ## Test Practice Persistence
