@@ -263,6 +263,27 @@ h3 {
   color: var(--primary);
 }
 
+.danger-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  border: 1px solid rgba(180, 68, 61, 0.28);
+  border-radius: 8px;
+  background: rgba(180, 68, 61, 0.1);
+  color: var(--red);
+  font-weight: 750;
+  padding: 0 18px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.small-action {
+  min-height: 36px;
+  padding: 0 12px;
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -343,6 +364,14 @@ h3 {
 .session-actions {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.inline-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
 }
 
@@ -392,6 +421,17 @@ select:focus {
   grid-template-columns: auto 1fr auto;
   gap: 14px;
   align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbf8f1;
+  padding: 14px;
+}
+
+.editable-end-card {
+  grid-template-columns: auto 1fr minmax(160px, auto) auto;
+}
+
+.edit-panel {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fbf8f1;
@@ -628,6 +668,38 @@ select:focus {
   text-align: center;
 }
 
+.skeleton-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.skeleton-panel span {
+  display: block;
+  height: 18px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #eee7db, #fffdf8, #eee7db);
+  background-size: 200% 100%;
+  animation: skeleton-pulse 1.2s ease-in-out infinite;
+}
+
+.skeleton-panel span:nth-child(2) {
+  width: 72%;
+}
+
+.skeleton-panel span:nth-child(3) {
+  width: 52%;
+}
+
+@keyframes skeleton-pulse {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
 @media (max-width: 1040px) {
   .app-shell {
     grid-template-columns: 1fr;
@@ -675,7 +747,8 @@ select:focus {
 
   .primary-action,
   .secondary-action,
-  .ghost-action {
+  .ghost-action,
+  .danger-action {
     width: 100%;
   }
 

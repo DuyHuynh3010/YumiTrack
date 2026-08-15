@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
-import { BarChart3, CalendarDays, Home, LogOut, PlusCircle } from "lucide-react";
+import { BarChart3, CalendarDays, FileDown, Home, LogOut, PlusCircle, User } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { ensureUserProfile } from "@/lib/supabase/profiles";
 
@@ -13,6 +13,8 @@ const navItems = [
   { href: "/practice", label: "Practice", icon: PlusCircle },
   { href: "/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/stats", label: "Stats", icon: BarChart3 },
+  { href: "/export", label: "Export", icon: FileDown },
+  { href: "/account", label: "Account", icon: User },
 ];
 
 type AppShellProps = {

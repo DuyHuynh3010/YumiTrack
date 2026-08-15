@@ -9,6 +9,7 @@ import {
   createPracticeEnd,
   createPracticeSession,
   loadLatestSessionForDate,
+  updatePracticeSession,
   updatePracticeSessionNote,
 } from "@/lib/supabase/practice-data";
 import type { PracticeSession } from "@/lib/types";
@@ -22,7 +23,7 @@ function getLocalDate() {
 }
 
 export function PracticeBuilder() {
-  const practiceDate = getLocalDate();
+  const [practiceDate, setPracticeDate] = useState(getLocalDate());
   const [session, setSession] = useState<PracticeSession | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [draft, setDraft] = useState<[boolean, boolean, boolean, boolean]>([true, false, true, true]);
@@ -40,6 +41,9 @@ export function PracticeBuilder() {
     let isMounted = true;
 
     async function loadSession() {
+      setIsLoading(true);
+      setError(null);
+      setMessage(null);
       try {
         const supabase = createSupabaseBrowserClient();
         const { data, error: userError } = await supabase.auth.getUser();
@@ -157,6 +161,28 @@ export function PracticeBuilder() {
     }
   }
 
+  async function toggleFinished() {
+    if (!session) {
+      return;
+    }
+
+    const finishedAt = session.finishedAt ? null : new Date().toISOString();
+    setIsSaving(true);
+    setError(null);
+    setMessage(null);
+
+    try {
+      const supabase = createSupabaseBrowserClient();
+      await updatePracticeSession(supabase, session.id, { finishedAt });
+      setSession((current) => (current ? { ...current, finishedAt } : current));
+      setMessage(finishedAt ? "Session finished." : "Session reopened.");
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : "Could not update session status.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   if (isLoading) {
     return (
       <section className="panel">
@@ -175,11 +201,22 @@ export function PracticeBuilder() {
         </div>
         <div className="session-actions">
           {stats ? <span className="pill">{stats.hitRate}% hit rate</span> : null}
+          {session ? <span className="pill">{session.finishedAt ? "Finished" : "Open"}</span> : null}
           <button className="ghost-action" disabled={isSaving || !userId} onClick={startNewSession} type="button">
             Start new session
           </button>
+          {session ? (
+            <button className="ghost-action" disabled={isSaving} onClick={toggleFinished} type="button">
+              {session.finishedAt ? "Reopen" : "Finish"}
+            </button>
+          ) : null}
         </div>
       </div>
+
+      <label className="field">
+        <span>Practice date</span>
+        <input disabled={isSaving} onChange={(event) => setPracticeDate(event.target.value)} type="date" value={practiceDate} />
+      </label>
 
       <label className="field">
         <span>Overall note</span>

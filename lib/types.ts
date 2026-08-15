@@ -14,6 +14,7 @@ export type PracticeSession = {
   overallNote: string;
   ends: PracticeEnd[];
   createdAt: string;
+  finishedAt?: string | null;
 };
 
 export type SessionStats = {

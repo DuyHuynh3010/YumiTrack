@@ -4,7 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
-const publicRoutes = new Set(["/login", "/signup"]);
+const publicRoutes = new Set(["/login", "/signup", "/reset-password"]);
 
 type AuthGateProps = {
   children: React.ReactNode;

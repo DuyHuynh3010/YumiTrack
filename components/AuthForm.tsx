@@ -134,6 +134,11 @@ export function AuthForm({ mode }: AuthFormProps) {
           {isLogin ? "Need an account? " : "Already have an account? "}
           <Link href={isLogin ? "/signup" : "/login"}>{isLogin ? "Sign up" : "Log in"}</Link>
         </p>
+        {isLogin ? (
+          <p className="auth-switch">
+            Forgot your password? <Link href="/reset-password">Reset it</Link>
+          </p>
+        ) : null}
         <p className="hint-text" style={{ marginTop: 12 }}>
           Uses Supabase Auth. Add your Supabase keys in `.env.local` before testing real accounts.
         </p>

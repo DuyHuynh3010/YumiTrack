@@ -1,10 +1,14 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PracticeEnd, PracticeSession } from "@/lib/types";
 
+const sessionSelect = "id, practice_date, overall_note, finished_at, created_at";
+const endSelect = "id, session_id, arrow_1, arrow_2, arrow_3, arrow_4, note, created_at";
+
 type SessionRow = {
   id: string;
   practice_date: string;
   overall_note: string | null;
+  finished_at: string | null;
   created_at: string;
 };
 
@@ -32,7 +36,7 @@ function mapEnd(row: EndRow): PracticeEnd {
 async function loadEnds(supabase: SupabaseClient, sessionId: string) {
   const { data, error } = await supabase
     .from("ends")
-    .select("id, session_id, arrow_1, arrow_2, arrow_3, arrow_4, note, created_at")
+    .select(endSelect)
     .eq("session_id", sessionId)
     .order("created_at", { ascending: true });
 
@@ -50,13 +54,14 @@ async function mapSessionWithEnds(supabase: SupabaseClient, row: SessionRow): Pr
     overallNote: row.overall_note ?? "",
     ends: await loadEnds(supabase, row.id),
     createdAt: row.created_at,
+    finishedAt: row.finished_at,
   };
 }
 
 export async function loadLatestSessionForDate(supabase: SupabaseClient, userId: string, practiceDate: string) {
   const { data, error } = await supabase
     .from("practice_sessions")
-    .select("id, practice_date, overall_note, created_at")
+    .select(sessionSelect)
     .eq("user_id", userId)
     .eq("practice_date", practiceDate)
     .order("created_at", { ascending: false })
@@ -67,19 +72,13 @@ export async function loadLatestSessionForDate(supabase: SupabaseClient, userId:
     throw error;
   }
 
-  if (!data) {
-    return null;
-  }
-
-  const row = data as SessionRow;
-
-  return mapSessionWithEnds(supabase, row);
+  return data ? mapSessionWithEnds(supabase, data as SessionRow) : null;
 }
 
 export async function loadRecentPracticeSessions(supabase: SupabaseClient, userId: string, limit = 12) {
   const { data, error } = await supabase
     .from("practice_sessions")
-    .select("id, practice_date, overall_note, created_at")
+    .select(sessionSelect)
     .eq("user_id", userId)
     .order("practice_date", { ascending: false })
     .order("created_at", { ascending: false })
@@ -95,7 +94,7 @@ export async function loadRecentPracticeSessions(supabase: SupabaseClient, userI
 export async function loadAllPracticeSessions(supabase: SupabaseClient, userId: string) {
   const { data, error } = await supabase
     .from("practice_sessions")
-    .select("id, practice_date, overall_note, created_at")
+    .select(sessionSelect)
     .eq("user_id", userId)
     .order("practice_date", { ascending: true })
     .order("created_at", { ascending: true });
@@ -110,7 +109,7 @@ export async function loadAllPracticeSessions(supabase: SupabaseClient, userId: 
 export async function loadPracticeSessionsInRange(supabase: SupabaseClient, userId: string, startDate: string, endDate: string) {
   const { data, error } = await supabase
     .from("practice_sessions")
-    .select("id, practice_date, overall_note, created_at")
+    .select(sessionSelect)
     .eq("user_id", userId)
     .gte("practice_date", startDate)
     .lte("practice_date", endDate)
@@ -127,7 +126,7 @@ export async function loadPracticeSessionsInRange(supabase: SupabaseClient, user
 export async function loadPracticeSessionById(supabase: SupabaseClient, userId: string, sessionId: string) {
   const { data, error } = await supabase
     .from("practice_sessions")
-    .select("id, practice_date, overall_note, created_at")
+    .select(sessionSelect)
     .eq("user_id", userId)
     .eq("id", sessionId)
     .maybeSingle();
@@ -136,11 +135,7 @@ export async function loadPracticeSessionById(supabase: SupabaseClient, userId: 
     throw error;
   }
 
-  if (!data) {
-    return null;
-  }
-
-  return mapSessionWithEnds(supabase, data as SessionRow);
+  return data ? mapSessionWithEnds(supabase, data as SessionRow) : null;
 }
 
 export async function createPracticeSession(supabase: SupabaseClient, userId: string, practiceDate: string) {
@@ -151,7 +146,7 @@ export async function createPracticeSession(supabase: SupabaseClient, userId: st
       practice_date: practiceDate,
       overall_note: "",
     })
-    .select("id, practice_date, overall_note, created_at")
+    .select(sessionSelect)
     .single();
 
   if (error) {
@@ -166,17 +161,44 @@ export async function createPracticeSession(supabase: SupabaseClient, userId: st
     overallNote: row.overall_note ?? "",
     ends: [],
     createdAt: row.created_at,
+    finishedAt: row.finished_at,
   } satisfies PracticeSession;
 }
 
+export async function updatePracticeSession(
+  supabase: SupabaseClient,
+  sessionId: string,
+  updates: { overallNote?: string; practiceDate?: string; finishedAt?: string | null },
+) {
+  const payload: Record<string, string | null> = {
+    updated_at: new Date().toISOString(),
+  };
+
+  if (updates.overallNote !== undefined) {
+    payload.overall_note = updates.overallNote;
+  }
+
+  if (updates.practiceDate !== undefined) {
+    payload.practice_date = updates.practiceDate;
+  }
+
+  if (updates.finishedAt !== undefined) {
+    payload.finished_at = updates.finishedAt;
+  }
+
+  const { error } = await supabase.from("practice_sessions").update(payload).eq("id", sessionId);
+
+  if (error) {
+    throw error;
+  }
+}
+
 export async function updatePracticeSessionNote(supabase: SupabaseClient, sessionId: string, overallNote: string) {
-  const { error } = await supabase
-    .from("practice_sessions")
-    .update({
-      overall_note: overallNote,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", sessionId);
+  return updatePracticeSession(supabase, sessionId, { overallNote });
+}
+
+export async function deletePracticeSession(supabase: SupabaseClient, sessionId: string) {
+  const { error } = await supabase.from("practice_sessions").delete().eq("id", sessionId);
 
   if (error) {
     throw error;
@@ -201,7 +223,7 @@ export async function createPracticeEnd(
       arrow_4: arrows[3],
       note,
     })
-    .select("id, session_id, arrow_1, arrow_2, arrow_3, arrow_4, note, created_at")
+    .select(endSelect)
     .single();
 
   if (error) {
@@ -209,4 +231,39 @@ export async function createPracticeEnd(
   }
 
   return mapEnd(data as EndRow);
+}
+
+export async function updatePracticeEnd(
+  supabase: SupabaseClient,
+  endId: string,
+  arrows: [boolean, boolean, boolean, boolean],
+  note: string,
+) {
+  const { data, error } = await supabase
+    .from("ends")
+    .update({
+      arrow_1: arrows[0],
+      arrow_2: arrows[1],
+      arrow_3: arrows[2],
+      arrow_4: arrows[3],
+      note,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", endId)
+    .select(endSelect)
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return mapEnd(data as EndRow);
+}
+
+export async function deletePracticeEnd(supabase: SupabaseClient, endId: string) {
+  const { error } = await supabase.from("ends").delete().eq("id", endId);
+
+  if (error) {
+    throw error;
+  }
 }

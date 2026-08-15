@@ -9,9 +9,13 @@ create table if not exists public.practice_sessions (
   user_id uuid references auth.users(id) on delete cascade not null,
   practice_date date default current_date not null,
   overall_note text,
+  finished_at timestamptz,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
+
+alter table public.practice_sessions
+add column if not exists finished_at timestamptz;
 
 create table if not exists public.ends (
   id uuid primary key default gen_random_uuid(),
