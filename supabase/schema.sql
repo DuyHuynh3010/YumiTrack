@@ -103,12 +103,24 @@ using (user_id = auth.uid());
 
 create policy "Users can create their own ends"
 on public.ends for insert
-with check (user_id = auth.uid());
+with check (
+  user_id = auth.uid()
+  and exists (
+    select 1 from public.practice_sessions
+    where id = ends.session_id and user_id = auth.uid()
+  )
+);
 
 create policy "Users can update their own ends"
 on public.ends for update
 using (user_id = auth.uid())
-with check (user_id = auth.uid());
+with check (
+  user_id = auth.uid()
+  and exists (
+    select 1 from public.practice_sessions
+    where id = ends.session_id and user_id = auth.uid()
+  )
+);
 
 create policy "Users can delete their own ends"
 on public.ends for delete

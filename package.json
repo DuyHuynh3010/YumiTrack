@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:integration": "node --env-file=.env.test.local scripts/integration-tests.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.4",
@@ -25,6 +28,8 @@
     "@types/react-dom": "^19.0.4",
     "eslint": "^9.25.1",
     "eslint-config-next": "^15.3.1",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vite": "^7.3.5",
+    "vitest": "^4.1.11"
   }
 }

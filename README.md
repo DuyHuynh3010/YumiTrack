@@ -55,7 +55,7 @@ http://localhost:3000/account
 
 ## Next Build Steps
 
-1. Add automated tests for practice calculations and Supabase mapping.
+1. Configure and run database integration tests with two dedicated test accounts.
 2. Move protected route checks to server middleware.
 3. Add technique tags and goal tracking.
 4. Add dark mode.
@@ -81,3 +81,35 @@ http://localhost:3000/account
 ## Deployment
 
 See `DEPLOYMENT.md` for Vercel and Supabase production setup.
+
+## Automated Tests
+
+Run local tests without Supabase credentials:
+
+```bash
+npm test
+npm run test:watch
+```
+
+These cover hit rates, weighted totals, daily/weekly/monthly chart grouping,
+date range request filters, data mapping, create/update/delete requests and errors.
+Supabase HTTP responses are mocked in unit tests; they do not prove database RLS.
+GitHub Actions runs these tests and TypeScript checks on pushes and pull requests.
+
+To test actual persistence and account isolation:
+
+1. Use a separate Supabase test project and apply `supabase/schema.sql`.
+2. Create two distinct test users and confirm their emails.
+3. Create `.env.test.local` using `.env.test.example` and fill in the test project
+   URL, publishable key, and both users' credentials. This file is ignored by Git.
+4. Run `npm run test:integration`.
+
+Integration tests exercise real CRUD, session delete cascades, and RLS in both
+directions: users cannot read, edit, delete, impersonate, or attach ends to another
+user's sessions. Anonymous reads and session creation are also checked.
+Only sessions created by the tests are deleted during cleanup; their ends cascade.
+Integration tests are deliberately separate from the default test command and CI
+because they require a configured test database and credentials.
+
+After updating from an older schema, rerun `supabase/schema.sql`: end insert/update
+policies now verify ownership of the parent session as well as the end itself.
